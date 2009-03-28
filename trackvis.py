@@ -113,6 +113,12 @@ def write_fibers(f, fiber):
 
 if __name__=="__main__":
 
+    
+    print "This simple program reads a TrackVis .trk file, parse it, build"
+    print "structures to represent fibers as Python dictionay of arrays"
+    print "and then saves structures in TrackVis .trk file format."
+    print "The resulting file is expected to be identical to the original."
+
     # filename = "dsi.trk"
     # filename = "dti.trk"
     filename = "hardiO10.trk"
@@ -128,7 +134,9 @@ if __name__=="__main__":
     print "Fiber ID=100:"
     print fiber[1000]
 
-    f = open(filename+"_copy",'w')
+    filename = filename+"_copy"
+    print "Saving to:", filename
+    f = open(filename,'w')
     write_header(f, header)
     write_fibers(f, fiber)
     f.close()
