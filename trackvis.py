@@ -58,7 +58,7 @@ def write_header(f, header):
 
 
 def print_header(header):
-    """Print relevnt info of header.
+    """Print relevant info of header.
     """
     print "Header:"
     relevant_fields = ['dim', 'voxel_size', 'origin', 'n_count' ]
