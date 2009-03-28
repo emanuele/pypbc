@@ -131,7 +131,7 @@ if __name__=="__main__":
     fiber = read_fibers(f, header)
     f.close()
     
-    print "Fiber ID=100:"
+    print "Fiber ID=1000:"
     print fiber[1000]
 
     filename = filename+"_copy"
