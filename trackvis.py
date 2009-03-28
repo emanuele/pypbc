@@ -124,7 +124,6 @@ def voxel2mm(Vxyz, header):
     
 
 if __name__=="__main__":
-
     
     print "This simple program reads a TrackVis .trk file, parse it, build"
     print "structures to represent fibers as Python dictionay of arrays"
