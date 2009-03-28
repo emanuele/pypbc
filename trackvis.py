@@ -111,6 +111,18 @@ def write_fibers(f, fiber):
     return
 
 
+def mm2voxel(xyz, header):
+    """Converts coordinates from mm to voxel.
+    """
+    return N.floor(xyz/header['voxel_size'])
+
+
+def voxel2mm(Vxyz, header):
+    """Converts coordinates from voxel to mm.
+    """
+    return (Vxyz+0.5)*header['voxel_size']
+    
+
 if __name__=="__main__":
 
     
@@ -133,7 +145,13 @@ if __name__=="__main__":
     
     print "Fiber ID=1000:"
     print fiber[1000]
-
+    print "Convert points from mm to voxel coordinate:"
+    Vxyz = mm2voxel(fiber[1000][0], header)
+    print Vxyz
+    print "Convert back and check whether differences are less than grid size...",
+    assert(((voxel2mm(Vxyz, header)-fiber[1000][0])<header['voxel_size']).all())
+    print "OK."
+    
     filename = filename+"_copy"
     print "Saving to:", filename
     f = open(filename,'w')
