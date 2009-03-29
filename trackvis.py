@@ -51,7 +51,8 @@ def write_header(f, header):
     """Write header to file.
     """
     for field_name, count, dtype in trk_header_structure:
-        header[field_name].tofile(f)
+        # Note that ".astype(dtype)" is just to be sure or correct types:
+        header[field_name].astype(dtype).tofile(f)
         pass
     assert(f.tell()==1000) # header is always 1000 bytes.
     return
