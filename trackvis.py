@@ -114,7 +114,7 @@ def write_fibers(f, fiber):
 def mm2voxel(xyz, header):
     """Converts coordinates from mm to voxel.
     """
-    return N.floor(xyz/header['voxel_size'])
+    return N.floor(xyz/header['voxel_size']).astype('i')
 
 
 def voxel2mm(Vxyz, header):
@@ -123,38 +123,94 @@ def voxel2mm(Vxyz, header):
     return (Vxyz+0.5)*header['voxel_size']
     
 
+def build_voxel_fibers_dict(fiber, header):
+    """Build a dictionary that map a voxel to all fibers crossing it.
+    """
+    voxel2fibers = {}
+    n_fibers = len(fiber.keys())
+    for fiber_id in range(n_fibers):
+        xyz = fiber[fiber_id][0]
+        ijk = mm2voxel(xyz, header)
+        for i in range(xyz.shape[0]):
+            try:
+                voxel2fibers[tuple(ijk[i,:])].append(fiber_id)
+            except KeyError:
+                voxel2fibers[tuple(ijk[i,:])] = [fiber_id]
+                pass
+            pass
+        if fiber_id%(int(n_fibers/10))==0:
+            print 'Mapping voxels to fibers...', str(1+int(100.0*fiber_id/n_fibers))+'%'
+            sys.stdout.flush()
+            pass
+        pass
+    n_voxels = len(voxel2fibers.keys())
+    for n, ijk in enumerate(voxel2fibers.keys()):
+        voxel2fibers[ijk] = N.array(voxel2fibers[ijk])
+        if n%(int(n_voxels/10))==0:
+            print 'Converting lists to arrays...', str(1+int(100.0*n/n_voxels))+'%'
+            sys.stdout.flush()
+            pass
+        pass
+    return voxel2fibers
+
+
 if __name__=="__main__":
     
     print "This simple program reads a TrackVis .trk file, parse it, build"
-    print "structures to represent fibers as Python dictionay of arrays"
+    print "structures to represent fibers as Python dictionary of arrays"
     print "and then saves structures in TrackVis .trk file format."
     print "The resulting file is expected to be identical to the original."
+    print "As a further step a dictionary, mapping voxel to fibers, is built"
+    print "and some examples are shown."
 
     # filename = "dsi.trk"
     # filename = "dti.trk"
     filename = "hardiO10.trk"
 
+    print
     print "file:", filename
-
     f = open(filename)
     header = read_header(f)
     print_header(header)
     fiber = read_fibers(f, header)
     f.close()
     
-    print "Fiber ID=1000:"
-    print fiber[1000]
-    print "Convert points from mm to voxel coordinate:"
-    Vxyz = mm2voxel(fiber[1000][0], header)
+    print
+    fiber_id = 1000
+    print "Example: fiber_id=",fiber_id
+    print fiber[fiber_id]
+    print "Convert points from mm to voxel coordinates:"
+    Vxyz = mm2voxel(fiber[fiber_id][0], header)
     print Vxyz
     print "Convert back and check whether differences are less than grid size...",
-    assert(((voxel2mm(Vxyz, header)-fiber[1000][0])<header['voxel_size']).all())
+    assert(((voxel2mm(Vxyz, header)-fiber[fiber_id][0])<header['voxel_size']).all())
     print "OK."
     
+    print
     filename = filename+"_copy"
     print "Saving to:", filename
     f = open(filename,'w')
     write_header(f, header)
     write_fibers(f, fiber)
     f.close()
+    
+    print
+    print "Building voxel2fibers dictionary:"
+    voxel2fibers = build_voxel_fibers_dict(fiber, header)
+    voxel = (50,50,30)
+    print "Example: fibers crossing voxel", voxel
+    print voxel2fibers[voxel]
 
+    print
+    x = 40
+    print "Example: counting fibers crossing plane x =", x
+    counter = 0
+    for y in range(header['dim'][1]):
+        for z in range(header['dim'][2]):
+            try:
+                counter += voxel2fibers[(x,y,z)].size
+            except KeyError:
+                pass
+            pass
+        pass
+    print "Number of fibers:", counter
