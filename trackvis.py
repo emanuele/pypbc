@@ -38,10 +38,6 @@ def read_header(f):
     header = {}
     for field_name, count, dtype in trk_header_structure:
         header[field_name] = N.fromfile(f, dtype=dtype, count=count)
-        #if header[field_name].size==1:
-        #    header[field_name] = header[field_name][0]
-        #    pass
-        # print field_name, ':', header[field_name]
         pass
     assert(f.tell()==1000) # header is always 1000 bytes.
     return header
