@@ -124,7 +124,7 @@ def voxel2mm(Vxyz, header):
     
 
 def build_voxel_fibers_dict(fiber, header):
-    """Build a dictionary that map a voxel to all fibers crossing it.
+    """Build a dictionary that maps a voxel to all fibers crossing it.
     """
     voxel2fibers = {}
     n_fibers = len(fiber.keys())
