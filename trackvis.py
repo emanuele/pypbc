@@ -93,7 +93,7 @@ def read_fibers(f, header):
     return fiber
 
 
-def write_fibers(f, fiber):
+def write_fibers(f, fiber, header):
     """Write fibers to file in .trk format. Assumption: header has
     already been written.
     """
@@ -165,11 +165,11 @@ if __name__=="__main__":
     print "The resulting file is expected to be identical to the original."
     print "As a further step a dictionary, mapping voxel to fibers, is built"
     print "and some examples are shown."
-
+    
     # filename = "dsi.trk"
     # filename = "dti.trk"
     filename = "hardiO10.trk"
-
+    
     print
     print "file:", filename
     f = open(filename)
@@ -190,20 +190,20 @@ if __name__=="__main__":
     print "OK."
     
     print
-    filename = filename+"_copy"
+    filename = filename+"_COPY.trk"
     print "Saving to:", filename
     f = open(filename,'w')
     write_header(f, header)
-    write_fibers(f, fiber)
+    write_fibers(f, fiber, header)
     f.close()
     
     print
     print "Building voxel2fibers dictionary:"
     voxel2fibers = build_voxel_fibers_dict(fiber, header)
-    voxel = (50,50,30)
+    voxel = tuple(header['dim'] / 2)
     print "Example: fibers crossing voxel", voxel
     print voxel2fibers[voxel]
-
+    
     print
     x = 40
     print "Example: counting fibers crossing plane x =", x
@@ -217,7 +217,7 @@ if __name__=="__main__":
             pass
         pass
     print "Number of fibers:", counter
-
+    
     print
     fiber_id = 1000
     print "Which fibers cross (the voxels of) fiber[fiber_id=",fiber_id,"] ?"
@@ -226,3 +226,16 @@ if __name__=="__main__":
     fiber_id_list = N.unique(N.hstack([voxel2fibers[i,j,k] for i,j,k in ijk]))
     print fiber_id_list
     print fiber_id_list.size, "fibers."
+
+    print
+    print "Saving .trk file with just the previous list of fibers."
+    print "Saving to:", filename
+    import copy
+    fiber2 = [fiber[fiber_id] for fiber_id in fiber_id_list]
+    header2 = copy.deepcopy(header)
+    header2['n_count'] = N.array([fiber_id_list.size], dtype='<i4')
+    filename = filename+'_cross_fiber_id_'+str(fiber_id)+'.trk'
+    f = open(filename, 'w')
+    write_header(f, header2)
+    write_fibers(f, fiber2, header2)
+    f.close()
