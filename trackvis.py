@@ -1,4 +1,5 @@
-"""Basic functions to read and write TrackVis .trk files.
+"""Basic functions to read and write TrackVis .trk files and to play
+with fibers.
 """
 
 import numpy as N
@@ -33,7 +34,7 @@ trk_header_structure = [['id_string', 1, 'S6'],
 
 
 def read_header(f):
-    """ Read and parse file header structure.
+    """ Read and parse .trk file header structure.
     """
     header = {}
     for field_name, count, dtype in trk_header_structure:
@@ -44,7 +45,7 @@ def read_header(f):
 
 
 def write_header(f, header):
-    """Write header to file.
+    """Write .trk header to file.
     """
     for field_name, count, dtype in trk_header_structure:
         # Note that ".astype(dtype)" is just to be sure or correct types:
@@ -55,7 +56,7 @@ def write_header(f, header):
 
 
 def print_header(header):
-    """Print relevant info of header.
+    """Print relevant info of .trk header.
     """
     print "Header:"
     relevant_fields = ['dim', 'voxel_size', 'origin', 'n_count' ]
@@ -66,11 +67,11 @@ def print_header(header):
 
 
 def read_fibers(f, header):
-    """Read fibers from file and fill a list.
+    """Read fibers from .trk file and fill a list.
     """
     fiber = []
     # structure of each entry of the list:
-    # fiber_id : [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...], [PROPERTIES]
+    # [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...]], [PROPERTIES]
     # Note that in PBC2009 trckvis files there are no scalars or
     # properties, which means that the actual structure of the fiber
     # list is simply:
@@ -124,7 +125,8 @@ def voxel2mm(Vxyz, header):
     
 
 def build_voxel_fibers_dict(fiber, header):
-    """Build a dictionary that maps a voxel to all fibers crossing it.
+    """Build a dictionary that given a voxel returns all fibers (IDs)
+    crossing it.
     """
     voxel2fibers = {}
     n_fibers = len(fiber)
@@ -144,6 +146,7 @@ def build_voxel_fibers_dict(fiber, header):
             pass
         pass
     n_voxels = len(voxel2fibers.keys())
+    # Now transform each list of IDs in an array of IDs:
     for n, ijk in enumerate(voxel2fibers.keys()):
         voxel2fibers[ijk] = N.array(voxel2fibers[ijk])
         if n%(int(n_voxels/10))==0:
