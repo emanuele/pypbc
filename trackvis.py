@@ -94,6 +94,9 @@ def read_fibers(f, header):
 
 
 def write_fibers(f, fiber):
+    """Write fibers to file in .trk format. Assumption: header has
+    already been written.
+    """
     n_scalars = header['n_scalars'][0]
     n_fibers = header['n_count'][0]
     for fiber_id in range(n_fibers):
