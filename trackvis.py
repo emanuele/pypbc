@@ -190,9 +190,9 @@ if __name__=="__main__":
     print "OK."
     
     print
-    filename = filename+"_COPY.trk"
-    print "Saving to:", filename
-    f = open(filename,'w')
+    filename2 = filename+"_COPY.trk"
+    print "Saving to:", filename2
+    f = open(filename2,'w')
     write_header(f, header)
     write_fibers(f, fiber, header)
     f.close()
@@ -205,7 +205,7 @@ if __name__=="__main__":
     print voxel2fibers[voxel]
     
     print
-    x = 40
+    x = header['dim'][0] / 2
     print "Example: counting fibers crossing plane x =", x
     counter = 0
     for y in range(header['dim'][1]):
@@ -219,7 +219,7 @@ if __name__=="__main__":
     print "Number of fibers:", counter
     
     print
-    fiber_id = 1000
+    fiber_id = 2000
     print "Which fibers cross (the voxels of) fiber[fiber_id=",fiber_id,"] ?"
     xyz = fiber[fiber_id][0]
     ijk = mm2voxel(xyz, header)
@@ -229,13 +229,13 @@ if __name__=="__main__":
 
     print
     print "Saving .trk file with just the previous list of fibers."
-    print "Saving to:", filename
+    filename3 = filename+'_cross_fiber_id_'+str(fiber_id)+'.trk'
+    print "Saving to:", filename3
     import copy
     fiber2 = [fiber[fiber_id] for fiber_id in fiber_id_list]
     header2 = copy.deepcopy(header)
     header2['n_count'] = N.array([fiber_id_list.size], dtype='<i4')
-    filename = filename+'_cross_fiber_id_'+str(fiber_id)+'.trk'
-    f = open(filename, 'w')
+    f = open(filename3, 'w')
     write_header(f, header2)
     write_fibers(f, fiber2, header2)
     f.close()
