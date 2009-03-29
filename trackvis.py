@@ -217,3 +217,12 @@ if __name__=="__main__":
             pass
         pass
     print "Number of fibers:", counter
+
+    print
+    fiber_id = 1000
+    print "Which fibers cross (the voxels of) fiber[fiber_id=",fiber_id,"] ?"
+    xyz = fiber[fiber_id][0]
+    ijk = mm2voxel(xyz, header)
+    fiber_id_list = N.unique(N.hstack([voxel2fibers[i,j,k] for i,j,k in ijk]))
+    print fiber_id_list
+    print fiber_id_list.size, "fibers."
