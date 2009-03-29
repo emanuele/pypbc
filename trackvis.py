@@ -69,14 +69,14 @@ def print_header(header):
 
 
 def read_fibers(f, header):
-    """Read fibers from file and fill a dictionary.
+    """Read fibers from file and fill a list.
     """
-    fiber = {}
-    # structure of each entry of the dictionary:
+    fiber = []
+    # structure of each entry of the list:
     # fiber_id : [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...], [PROPERTIES]
     # Note that in PBC2009 trckvis files there are no scalars or
     # properties, which means that the actual structure of the fiber
-    # dictionary is simply:
+    # list is simply:
     # fiber_id : [[X1,Y1,Z1],...,[Xn,Yn,Zn]], []
     n_scalars = header['n_scalars'][0]
     n_fibers = header['n_count'][0]
@@ -84,7 +84,7 @@ def read_fibers(f, header):
         num_points = N.fromfile(f, dtype='<i4', count=1)[0]
         xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
         properties = N.fromfile(f, dtype='<f4', count=header['n_properties'][0])
-        fiber[fiber_id] = [xyz_scalar, properties]
+        fiber.append([xyz_scalar, properties])
         if fiber_id%(int(n_fibers/10))==0:
             print 'Reading fibers...', str(1+int(100.0*fiber_id/n_fibers))+'%'
             sys.stdout.flush()
@@ -127,7 +127,7 @@ def build_voxel_fibers_dict(fiber, header):
     """Build a dictionary that maps a voxel to all fibers crossing it.
     """
     voxel2fibers = {}
-    n_fibers = len(fiber.keys())
+    n_fibers = len(fiber)
     for fiber_id in range(n_fibers):
         xyz = fiber[fiber_id][0]
         ijk = mm2voxel(xyz, header)
@@ -157,7 +157,7 @@ def build_voxel_fibers_dict(fiber, header):
 if __name__=="__main__":
     
     print "This simple program reads a TrackVis .trk file, parse it, build"
-    print "structures to represent fibers as Python dictionary of arrays"
+    print "structures to represent fibers as Python list of arrays"
     print "and then saves structures in TrackVis .trk file format."
     print "The resulting file is expected to be identical to the original."
     print "As a further step a dictionary, mapping voxel to fibers, is built"
