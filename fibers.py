@@ -66,6 +66,16 @@ def print_header(header):
     return
 
 
+def progress_meter(position, total, message, steps=10):
+    """Simple progress meter.
+    """
+    if position%(int(total/steps))==0:
+        print message, str(1+int(100.0*position/total))+'%'
+        sys.stdout.flush()
+        pass
+    return
+
+
 def read_fibers(f, header):
     """Read fibers from .trk file and fill a list.
     """
@@ -83,10 +93,7 @@ def read_fibers(f, header):
         xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
         properties = N.fromfile(f, dtype='<f4', count=header['n_properties'][0])
         fiber.append([xyz_scalar, properties])
-        if fiber_id%(int(n_fibers/10))==0:
-            print 'Reading fibers...', str(1+int(100.0*fiber_id/n_fibers))+'%'
-            sys.stdout.flush()
-            pass
+        progress_meter(fiber_id, n_fibers, 'Reading fibers...')
         pass
     return fiber
 
@@ -104,10 +111,7 @@ def write_fibers(f, fiber, header):
         xyz_scalar.tofile(f)
         properties = N.array(fiber[fiber_id][1], dtype='<f4')
         properties.tofile(f)
-        if fiber_id%(int(n_fibers/10))==0:
-            print 'Writing fibers...', str(1+int(100.0*fiber_id/n_fibers))+'%'
-            sys.stdout.flush()
-            pass
+        progress_meter(fiber_id, n_fibers, 'Writing fibers...')
         pass
     return
 
@@ -140,19 +144,13 @@ def build_voxel_fibers_dict(fiber, header):
                 voxel2fibers[tuple(ijk[i,:])] = [fiber_id]
                 pass
             pass
-        if fiber_id%(int(n_fibers/10))==0:
-            print 'Mapping voxels to fibers...', str(1+int(100.0*fiber_id/n_fibers))+'%'
-            sys.stdout.flush()
-            pass
+        progress_meter(fiber_id, n_fibers, 'Mapping voxels to fibers...')
         pass
     n_voxels = len(voxel2fibers.keys())
     # Now transform each list of IDs in an array of IDs:
     for n, ijk in enumerate(voxel2fibers.keys()):
         voxel2fibers[ijk] = N.array(voxel2fibers[ijk])
-        if n%(int(n_voxels/10))==0:
-            print 'Converting lists to arrays...', str(1+int(100.0*n/n_voxels))+'%'
-            sys.stdout.flush()
-            pass
+        progress_meter(n, n_voxels, 'Converting lists to arrays...')
         pass
     return voxel2fibers
 
