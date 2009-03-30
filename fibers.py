@@ -1,5 +1,11 @@
 """Basic functions to read and write TrackVis .trk files and to play
 with fibers.
+
+Copyright (c) 2009 Emanuele Olivetti <emanuele_AT_relativita.com>
+
+This library is free software; you can redistribute it and/or modify
+it either under the terms of the GNU General Public License version 3
+as published by the Free Software Foundation.
 """
 
 import numpy as N
@@ -162,7 +168,7 @@ if __name__=="__main__":
     print "and then saves structures in TrackVis .trk file format."
     print "The resulting file is expected to be identical to the original."
     print "As a further step a dictionary, mapping voxel to fibers, is built"
-    print "and some examples are shown."
+    print "and some examples using it are shown."
     
     # filename = "dsi.trk"
     # filename = "dti.trk"
@@ -232,7 +238,7 @@ if __name__=="__main__":
     import copy
     fiber2 = [fiber[fiber_id] for fiber_id in fiber_id_list]
     header2 = copy.deepcopy(header)
-    header2['n_count'] = N.array([fiber_id_list.size], dtype='<i4')
+    header2['n_count'] = N.array([fiber_id_list.size])
     f = open(filename3, 'w')
     write_header(f, header2)
     write_fibers(f, fiber2, header2)
