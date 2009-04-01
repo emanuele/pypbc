@@ -210,6 +210,7 @@ if __name__=="__main__":
         print voxel2fibers[voxel]
     except KeyError:
         print []
+        print "There are no fibers crossing this voxel."
         pass
     
     print
