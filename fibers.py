@@ -206,7 +206,11 @@ if __name__=="__main__":
     voxel2fibers = build_voxel_fibers_dict(fiber, header)
     voxel = tuple(header['dim'] / 2)
     print "Example: fibers crossing voxel", voxel
-    print voxel2fibers[voxel]
+    try:
+        print voxel2fibers[voxel]
+    except KeyError:
+        print []
+        pass
     
     print
     x = header['dim'][0] / 2
