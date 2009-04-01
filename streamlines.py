@@ -1,3 +1,6 @@
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+
 """Basic functions to read and write TrackVis .trk files and to play
 with streamlines.
 
@@ -11,6 +14,7 @@ as published by the Free Software Foundation.
 import numpy as N
 import sys
 import copy
+import operator
 
 # Definition of trackvis header structure.
 # See http://www.trackvis.org/docs/?subsect=fileformat
@@ -164,7 +168,6 @@ class Streamlines(object):
         """
         return N.floor(xyz/self.header['voxel_size']).astype('i')
 
-
     def voxel2mm(self, Vxyz):
         """Converts coordinates from voxel to mm.
         """
@@ -211,9 +214,25 @@ class Streamlines(object):
         adjusted to the actual number of fibers.
         """
         new_streamlines = self.fastCopy()
-        new_streamlines.streamline = [self.streamline[streamline_id] for streamline_id in streamline_id_list]
+        new_streamlines.streamline = [self.streamline[streamline_id] for streamline_id in streamlines_ids]
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
+
+
+    def selectStreamlinesFromVoxels(self, voxels):
+        """Select streamlines specifying a list of voxels they must cross.
+        """
+        # WARNING: if a voxels has no fibers than KeyError is raised!
+        #
+        # SLOW:
+        # tmp = [list(self.voxel2streamlines[tuple(voxel)]) for voxel in voxels]
+        # streamlines_ids = unique(reduce(operator.add, tmp))
+        #
+        # FAST:
+        streamlines_ids = N.unique(N.hstack([voxel2streamlines[tuple(v)] for v in voxels]))
+        # ALTERNATIVE:
+        # streamlines_ids = N.unique(N.hstack([voxel2streamlines[i,j,k] for i,j,k in voxels]))
+        return self.selectStreamlines(streamlines_ids)
 
 
 if __name__=="__main__":
@@ -224,7 +243,7 @@ if __name__=="__main__":
     print "The resulting file is expected to be identical to the original."
     print "As a further step a dictionary, mapping voxel to streamlines, is built"
     print "and some examples using it are shown."
-
+    
     
     streamlines = Streamlines()
     
@@ -284,15 +303,15 @@ if __name__=="__main__":
     print "Which streamlines cross (the voxels of) streamline[streamline_id=",streamline_id,"] ?"
     xyz = streamline[streamline_id][0]
     ijk = streamlines.mm2voxel(xyz)
-    streamline_id_list = N.unique(N.hstack([voxel2streamlines[i,j,k] for i,j,k in ijk]))
-    print streamline_id_list
-    print streamline_id_list.size, "streamlines."
+    streamlines2 = streamlines.selectStreamlinesFromVoxels(ijk)
+    print len(streamlines2.streamline), "streamlines."
+
+    # WARNING: streamlines2 has a subset of the fibers of streamlines
+    # but we lost the streamline_id information since it is not
+    # stored anywhere!!! It would be better to store IDs somewhere...
     
     print
     print "Saving .trk file with just the previous list of streamlines."
     filename3 = filename+'_cross_streamline_id_'+str(streamline_id)+'.trk'
     print "Saving to:", filename3
-
-    streamlines2 = streamlines.selectStreamlines(streamline_id_list)
     streamlines2.saveTrk(filename3)
-
