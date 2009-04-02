@@ -111,3 +111,9 @@ if __name__=="__main__":
     print "Selecting streamlines crossing slice x =",x
     s3 = s.selectStreamlinesFromSlice(x=x)
     print len(s3.streamline), "streamlines."
+
+    # WARNING: I'm trying to select the same slice in TrackVis
+    # using hardiO10.trk but I get 41065 streamlines there
+    # (Skip=0%) of the instead of the 35571 I get here!!
+    # Note that I compare slice x=50 here and slice x=51 in
+    # TrackVis, according to the different numbering scheme.

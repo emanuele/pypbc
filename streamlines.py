@@ -247,7 +247,7 @@ class Streamlines(object):
         """Select streamlines specifying a slice (e.g., y=5)
         or a combination of slices (e.g., x=2, y=5).
         """
-        # Build the list of voxels coordinates related to the slices:
+        # Build the list of voxels coordinates related to the desired slice:
         xx, yy, zz = 1, 1, 1
         if x==None: xx = self.header['dim'][0]; x = 0
         if y==None: yy = self.header['dim'][1]; y = 0
