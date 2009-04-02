@@ -233,22 +233,24 @@ class Streamlines(object):
         # streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[i,j,k] for i,j,k in voxels]))
         return self.selectStreamlines(streamlines_ids)
 
-    def getVolume(self):
+    def getVolume(self, count=False):
         """Return a volume where a voxel is 1 if at least one fiber
         crosses it, otherwise 0.
         """
         volume = N.zeros(self.header['dim'], dtype='i')
-        if self.voxel2streamlines is not None: # fast:
+        if (self.voxel2streamlines is not None) and count==False: # fast:
             ijk = N.array(self.voxel2streamlines.keys())
             volume[ijk[:,0],ijk[:,1],ijk[:,2]] = 1.0
             pass
         else: # slow but does not require voxel2streamlines:
             for xyz, tmp in self.streamline:
                 ijk = self.mm2voxel(xyz)
-                volume[ijk[:,0],ijk[:,1],ijk[:,2]] = 1
+                volume[ijk[:,0],ijk[:,1],ijk[:,2]] += 1
                 pass
             pass
-        return volume
+        if count:
+            return volume
+        return (volume>0).astype('i')
 
 
 if __name__=="__main__":

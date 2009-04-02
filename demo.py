@@ -101,3 +101,7 @@ if __name__=="__main__":
     volume2 = s2.getVolume()
     print volume2.sum(), "voxels crossed by those streamlines."
     
+    volume3 = s2.getVolume(count=True)
+    print volume3.max(), "is the max number of streamlines crossing a single voxel."
+    print "this voxel is", N.unravel_index(volume3.argmax(), volume3.shape)
+    
