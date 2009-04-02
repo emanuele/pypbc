@@ -12,6 +12,7 @@ as published by the Free Software Foundation.
 
 import streamlines
 import sys
+import numpy as N
 
 if __name__=="__main__":
     
@@ -104,4 +105,9 @@ if __name__=="__main__":
     volume3 = s2.getVolume(count=True)
     print volume3.max(), "is the max number of streamlines crossing a single voxel."
     print "this voxel is", N.unravel_index(volume3.argmax(), volume3.shape)
-    
+
+    print
+    x = 50
+    print "Selecting streamlines crossing slice x =",x
+    s3 = s.selectStreamlinesFromSlice(x=x)
+    print len(s3.streamline), "streamlines."

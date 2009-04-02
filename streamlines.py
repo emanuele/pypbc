@@ -228,10 +228,32 @@ class Streamlines(object):
         # streamlines_ids = unique(reduce(operator.add, tmp))
         #
         # FAST:
-        streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[tuple(v)] for v in voxels]))
+        # streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[tuple(v)] for v in voxels]))
         # ALTERNATIVE:
         # streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[i,j,k] for i,j,k in voxels]))
-        return self.selectStreamlines(streamlines_ids)
+        tmp = []
+        for i,j,k in voxels:
+            try:
+                tmp.append(self.voxel2streamlines[i,j,k])
+            except KeyError: # some voxels are empty...
+                pass
+            pass
+        if tmp!=[]:
+            streamlines_ids = N.unique(N.hstack(tmp))
+            return self.selectStreamlines(streamlines_ids)
+        return None
+
+    def selectStreamlinesFromSlice(self, x=None, y=None, z=None):
+        """Select streamlines specifying a slice (e.g., y=5)
+        or a combination of slices (e.g., x=2, y=5).
+        """
+        # Build the list of voxels coordinates related to the slices:
+        xx, yy, zz = 1, 1, 1
+        if x==None: xx = self.header['dim'][0]; x = 0
+        if y==None: yy = self.header['dim'][1]; y = 0
+        if z==None: zz = self.header['dim'][2]; z = 0
+        voxels = N.indices((xx,yy,zz)).reshape(3,xx*yy*zz).T + N.array([x,y,z])
+        return self.selectStreamlinesFromVoxels(voxels)
 
     def getVolume(self, count=False):
         """Return a volume where a voxel is 1 if at least one fiber
