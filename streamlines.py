@@ -70,7 +70,7 @@ class Streamlines(object):
             self.streamline = {}
             pass
         self.filename = None
-        self.voxel2streamlines = {}
+        self.voxel2streamlines = None
         return
 
     def loadTrk(self, filename):
@@ -218,7 +218,6 @@ class Streamlines(object):
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
 
-
     def selectStreamlinesFromVoxels(self, voxels):
         """Select streamlines specifying a list of voxels they must cross.
         """
@@ -229,10 +228,27 @@ class Streamlines(object):
         # streamlines_ids = unique(reduce(operator.add, tmp))
         #
         # FAST:
-        streamlines_ids = N.unique(N.hstack([voxel2streamlines[tuple(v)] for v in voxels]))
+        streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[tuple(v)] for v in voxels]))
         # ALTERNATIVE:
-        # streamlines_ids = N.unique(N.hstack([voxel2streamlines[i,j,k] for i,j,k in voxels]))
+        # streamlines_ids = N.unique(N.hstack([self.voxel2streamlines[i,j,k] for i,j,k in voxels]))
         return self.selectStreamlines(streamlines_ids)
+
+    def getVolume(self):
+        """Return a volume where a voxel is 1 if at least one fiber
+        crosses it, otherwise 0.
+        """
+        volume = N.zeros(self.header['dim'], dtype='i')
+        if self.voxel2streamlines is not None: # fast:
+            ijk = N.array(self.voxel2streamlines.keys())
+            volume[ijk[:,0],ijk[:,1],ijk[:,2]] = 1.0
+            pass
+        else: # slow but does not require voxel2streamlines:
+            for xyz, tmp in self.streamline:
+                ijk = self.mm2voxel(xyz)
+                volume[ijk[:,0],ijk[:,1],ijk[:,2]] = 1
+                pass
+            pass
+        return volume
 
 
 if __name__=="__main__":
@@ -315,3 +331,6 @@ if __name__=="__main__":
     filename3 = filename+'_cross_streamline_id_'+str(streamline_id)+'.trk'
     print "Saving to:", filename3
     streamlines2.saveTrk(filename3)
+
+    volume2 = streamlines2.getVolume()
+    print volume2.sum()
