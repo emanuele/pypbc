@@ -44,17 +44,6 @@ trk_header_structure = [['id_string', 1, 'S6'],
                         ]
 
 
-
-def progress_meter(position, total, message, steps=10):
-    """Simple progress meter.
-    """
-    if position%(int(total/steps))==0:
-        print message, str(1+int(100.0*position/total))+'%'
-        sys.stdout.flush()
-        pass
-    return
-
-
 class Streamlines(object):
     """Class to deal with some streamlines.
     """
@@ -71,6 +60,16 @@ class Streamlines(object):
             pass
         self.filename = None
         self.voxel2streamlines = None
+        return
+
+    @staticmethod
+    def progress_meter(position, total, message, steps=10):
+        """Simple progress meter. Static method.
+        """
+        if position%(int(total/steps))==0:
+            print message, str(1+int(100.0*position/total))+'%'
+            sys.stdout.flush()
+            pass
         return
 
     def loadTrk(self, filename):
@@ -142,7 +141,7 @@ class Streamlines(object):
             xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
             properties = N.fromfile(f, dtype='<f4', count=self.header['n_properties'][0])
             self.streamline.append([xyz_scalar, properties])
-            progress_meter(streamline_id, n_streamlines, 'Reading streamlines...')
+            self.progress_meter(streamline_id, n_streamlines, 'Reading streamlines...')
             pass
         return
         
@@ -159,7 +158,7 @@ class Streamlines(object):
             xyz_scalar.tofile(f)
             properties = N.array(self.streamline[streamline_id][1], dtype='<f4')
             properties.tofile(f)
-            progress_meter(streamline_id, n_streamlines, 'Writing streamlines...')
+            self.progress_meter(streamline_id, n_streamlines, 'Writing streamlines...')
             pass
         return
 
@@ -189,13 +188,13 @@ class Streamlines(object):
                     self.voxel2streamlines[tuple(ijk[i,:])] = [streamline_id]
                     pass
                 pass
-            progress_meter(streamline_id, n_streamlines, 'Mapping voxels to streamlines...')
+            self.progress_meter(streamline_id, n_streamlines, 'Mapping voxels to streamlines...')
             pass
         n_voxels = len(self.voxel2streamlines.keys())
         # Now transform each list of IDs in an array of IDs:
         for n, ijk in enumerate(self.voxel2streamlines.keys()):
             self.voxel2streamlines[ijk] = N.array(self.voxel2streamlines[ijk])
-            progress_meter(n, n_voxels, 'Converting lists to arrays...')
+            self.progress_meter(n, n_voxels, 'Converting lists to arrays...')
             pass
         return self.voxel2streamlines
 
