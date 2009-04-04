@@ -7,6 +7,13 @@ and use these repositories:
 https://launchpad.net/~gael-varoquaux/+archive
 Note that mayavi2 shipped with more recent releases of Ubuntu works
 fine.
+
+
+Copyright (c) 2009 Emanuele Olivetti <emanuele_AT_relativita.com>
+
+This library is free software; you can redistribute it and/or modify
+it either under the terms of the GNU General Public License version 3
+as published by the Free Software Foundation.
 """
 
 from enthought.mayavi import mlab
