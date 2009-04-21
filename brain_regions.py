@@ -39,12 +39,13 @@ def parse_fs_lut(filename="FreeSurferColorLUT.txt"):
 
 if __name__=="__main__":
 
+    path = "PghBC2009/brain0/Structurals/"
     label_filename = "docs/FreeSurferColorLUT.txt"
     brain_filename = "DWISpace/brain0_asegonB0Anz.hdr"
 
-    fs_lut = parse_fs_lut(label_filename)
+    fs_lut = parse_fs_lut(path+label_filename)
 
-    im = nifti.NiftiImage(brain_filename)
+    im = nifti.NiftiImage(path+brain_filename)
     volume = im.asarray()
 
     # Show one random slice:
