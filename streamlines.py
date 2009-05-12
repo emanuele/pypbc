@@ -128,19 +128,17 @@ class Streamlines(object):
         """Read streamlines from .trk file and fill a list.
         """
         self.streamline = []
+        self.properties = []
         # structure of each entry of the self.streamline list:
-        # [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...]], [PROPERTIES]
-        # Note that in PBC2009 trckvis files there are no scalars or
-        # properties, which means that the actual structure of the streamline
-        # list is simply:
-        # streamline_id : [[X1,Y1,Z1],...,[Xn,Yn,Zn]], []
+        # [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...]]
         n_scalars = self.header['n_scalars'][0]
         n_streamlines = self.header['n_count'][0]
         for streamline_id in range(n_streamlines):
             num_points = N.fromfile(f, dtype='<i4', count=1)[0]
             xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
             properties = N.fromfile(f, dtype='<f4', count=self.header['n_properties'][0])
-            self.streamline.append([xyz_scalar, properties])
+            self.streamline.append(xyz_scalar)
+            self.properties.append(properties)
             self.progress_meter(streamline_id, n_streamlines, 'Reading streamlines...')
             pass
         return
@@ -152,11 +150,11 @@ class Streamlines(object):
         n_scalars = self.header['n_scalars'][0]
         n_streamlines = self.header['n_count'][0]
         for streamline_id in range(n_streamlines):
-            num_points = N.array((self.streamline[streamline_id][0]).shape[0], dtype='<i4')
+            num_points = N.array((self.streamline[streamline_id]).shape[0], dtype='<i4')
             num_points.tofile(f)
-            xyz_scalar = N.array(self.streamline[streamline_id][0], dtype='<f4')
+            xyz_scalar = N.array(self.streamline[streamline_id], dtype='<f4')
             xyz_scalar.tofile(f)
-            properties = N.array(self.streamline[streamline_id][1], dtype='<f4')
+            properties = N.array(self.properties[streamline_id], dtype='<f4')
             properties.tofile(f)
             self.progress_meter(streamline_id, n_streamlines, 'Writing streamlines...')
             pass
@@ -179,7 +177,7 @@ class Streamlines(object):
         self.voxel2streamlines = {}
         n_streamlines = len(self.streamline)
         for streamline_id in range(n_streamlines):
-            xyz = self.streamline[streamline_id][0]
+            xyz = self.streamline[streamline_id]
             ijk = self.mm2voxel(xyz)
             for i in range(xyz.shape[0]):
                 try:
@@ -214,6 +212,7 @@ class Streamlines(object):
         """
         new_streamlines = self.fastCopy()
         new_streamlines.streamline = [self.streamline[streamline_id] for streamline_id in streamlines_ids]
+        new_streamlines.properties = [self.properties[streamline_id] for streamline_id in streamlines_ids]        
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
 
@@ -264,7 +263,7 @@ class Streamlines(object):
             volume[ijk[:,0],ijk[:,1],ijk[:,2]] = 1.0
             pass
         else: # slow but does not require voxel2streamlines:
-            for xyz, tmp in self.streamline:
+            for xyz in self.streamline:
                 ijk = self.mm2voxel(xyz)
                 volume[ijk[:,0],ijk[:,1],ijk[:,2]] += 1
                 pass

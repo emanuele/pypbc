@@ -36,7 +36,7 @@ if __name__=="__main__":
         s.printHeaderTrk()
         pass
 
-    for stream, tmp in s.streamline:
+    for stream in s.streamline:
         mlab.plot3d(stream[:,0], stream[:,1], stream[:,2], tube_radius=0.2)
         pass
 
