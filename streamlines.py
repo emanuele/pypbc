@@ -47,7 +47,7 @@ trk_header_structure = [['id_string', 1, 'S6'],
 class Streamlines(object):
     """Class to deal with some streamlines.
     """
-    def __init__(self, header=None, streamline=None):
+    def __init__(self, header=None, streamline=None, properties=None, streamline_id=None, streamlineid_pos=None):
         """Constructor.
         """
         self.header = header
@@ -56,8 +56,14 @@ class Streamlines(object):
             pass
         self.streamline = streamline
         if self.streamline == None:
-            self.streamline = {}
+            self.streamline = []
             pass
+        self.properties = properties
+        if self.properties == None:
+            self.properties = []
+            pass
+        self.streamline_id = streamline_id
+        self.streamlineid_pos = streamlineid_pos
         self.filename = None
         self.voxel2streamlines = None
         return
@@ -133,13 +139,15 @@ class Streamlines(object):
         # [[X1,Y1,Z1,SCALAR1...],...,[Xn,Yn,Zn,SCALARn...]]
         n_scalars = self.header['n_scalars'][0]
         n_streamlines = self.header['n_count'][0]
-        for streamline_id in range(n_streamlines):
+        self.streamline_id = range(1, n_streamlines+1)
+        self.streamlineid_pos = dict(zip(self.streamline_id, range(n_streamlines)))
+        for k in range(n_streamlines):
             num_points = N.fromfile(f, dtype='<i4', count=1)[0]
             xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
             properties = N.fromfile(f, dtype='<f4', count=self.header['n_properties'][0])
             self.streamline.append(xyz_scalar)
             self.properties.append(properties)
-            self.progress_meter(streamline_id, n_streamlines, 'Reading streamlines...')
+            self.progress_meter(k, n_streamlines, 'Reading streamlines...')
             pass
         return
         
@@ -149,14 +157,16 @@ class Streamlines(object):
         """
         n_scalars = self.header['n_scalars'][0]
         n_streamlines = self.header['n_count'][0]
-        for streamline_id in range(n_streamlines):
-            num_points = N.array((self.streamline[streamline_id]).shape[0], dtype='<i4')
+        k = 0
+        for streamline_id in self.streamline_id:
+            num_points = N.array((self.get_streamline(streamline_id)).shape[0], dtype='<i4')
             num_points.tofile(f)
-            xyz_scalar = N.array(self.streamline[streamline_id], dtype='<f4')
+            xyz_scalar = N.array(self.get_streamline(streamline_id), dtype='<f4')
             xyz_scalar.tofile(f)
-            properties = N.array(self.properties[streamline_id], dtype='<f4')
+            properties = N.array(self.get_properties(streamline_id), dtype='<f4')
             properties.tofile(f)
-            self.progress_meter(streamline_id, n_streamlines, 'Writing streamlines...')
+            self.progress_meter(k, n_streamlines, 'Writing streamlines...')
+            k += 1
             pass
         return
 
@@ -176,17 +186,19 @@ class Streamlines(object):
         """
         self.voxel2streamlines = {}
         n_streamlines = len(self.streamline)
-        for streamline_id in range(n_streamlines):
-            xyz = self.streamline[streamline_id]
+        k = 0
+        for streamline_id in self.streamline_id:
+            xyz = self.get_streamline(streamline_id)
             ijk = self.mm2voxel(xyz)
             for i in range(xyz.shape[0]):
                 try:
-                    self.voxel2streamlines[tuple(ijk[i,:])].append(streamline_id)
+                    self.voxel2streamlines[tuple(ijk[i,:])].append(self.streamline_id[k])
                 except KeyError:
-                    self.voxel2streamlines[tuple(ijk[i,:])] = [streamline_id]
+                    self.voxel2streamlines[tuple(ijk[i,:])] = [self.streamline_id[k]]
                     pass
                 pass
-            self.progress_meter(streamline_id, n_streamlines, 'Mapping voxels to streamlines...')
+            self.progress_meter(k, n_streamlines, 'Mapping voxels to streamlines...')
+            k += 1
             pass
         n_voxels = len(self.voxel2streamlines.keys())
         # Now transform each list of IDs in an array of IDs:
@@ -204,6 +216,12 @@ class Streamlines(object):
         new_streamlines.header = copy.deepcopy(self.header)
         return new_streamlines
 
+    def get_streamline(self, streamline_id):
+        return self.streamline[self.streamlineid_pos[streamline_id]]
+
+    def get_properties(self, streamline_id):
+        return self.properties[self.streamlineid_pos[streamline_id]]
+
     def selectStreamlines(self, streamlines_ids):
         """Given a list of streamlines ID returns a new Streamline
         object with just those streamlines and an header equivalent to
@@ -211,8 +229,10 @@ class Streamlines(object):
         adjusted to the actual number of fibers.
         """
         new_streamlines = self.fastCopy()
-        new_streamlines.streamline = [self.streamline[streamline_id] for streamline_id in streamlines_ids]
-        new_streamlines.properties = [self.properties[streamline_id] for streamline_id in streamlines_ids]        
+        new_streamlines.streamline = [self.get_streamline(streamline_id) for streamline_id in streamlines_ids]
+        new_streamlines.properties = [self.get_properties(streamline_id) for streamline_id in streamlines_ids]
+        new_streamlines.streamline_id = list(streamlines_ids)
+        new_streamlines.streamlineid_pos = dict(zip(streamlines_ids, range(len(streamlines_ids)))) # this remaps streamline_id to the correct new positions
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
 
