@@ -51,19 +51,15 @@ class Streamlines(object):
         """Constructor.
         """
         self.header = header
-        if self.header == None:
-            self.header = {}
-            pass
+        if self.header == None: self.header = {}
         self.streamline = streamline
-        if self.streamline == None:
-            self.streamline = []
-            pass
+        if self.streamline == None: self.streamline = []
         self.properties = properties
-        if self.properties == None:
-            self.properties = []
-            pass
+        if self.properties == None: self.properties = []
         self.streamline_id = streamline_id
+        if self.streamline_id == None: self.streamline_id = []
         self.streamlineid_pos = streamlineid_pos
+        if self.streamlineid_pos == None: self.streamlineid_pos = []
         self.filename = None
         self.voxel2streamlines = None
         return
