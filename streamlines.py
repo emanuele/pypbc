@@ -50,7 +50,10 @@ trk_header_structure = [['id_string', 1, 'S6'],
 class Streamlines(object):
     """Class to deal with some streamlines.
     """
-    def __init__(self, header=None, streamline=None, properties=None, streamline_id=None, streamlineid_pos=None):
+
+    unknown_streamline = 0
+    
+    def __init__(self, header=None, streamline=None, properties=None, streamline_id=None, streamlineid_pos=None, streamline_label=None, num_label=None, label_num=None):
         """Constructor.
         """
         self.header = header
@@ -63,6 +66,12 @@ class Streamlines(object):
         if self.streamline_id == None: self.streamline_id = []
         self.streamlineid_pos = streamlineid_pos
         if self.streamlineid_pos == None: self.streamlineid_pos = []
+        self.streamline_label = streamline_label
+        if self.streamline_label == None: self.streamline_label = []
+        self.num_label = num_label
+        if self.num_label == None: self.num_label = {}
+        self.label_num = label_num
+        if self.label_num == None: self.label_num = {}
         self.filename = None
         self.voxel2streamlines = None
         return
@@ -144,6 +153,7 @@ class Streamlines(object):
         n_streamlines = self.header['n_count'][0]
         self.streamline_id = range(1, n_streamlines+1)
         self.streamlineid_pos = dict(zip(self.streamline_id, range(n_streamlines)))
+        self.streamline_label = N.ones(n_streamlines, dtype=int)*self.unknown_streamline # assign unknown label as default
         for k in range(n_streamlines):
             num_points = N.fromfile(f, dtype='<i4', count=1)[0]
             xyz_scalar = N.fromfile(f, dtype='<f4', count=num_points*(3+n_scalars)).reshape(num_points, 3+n_scalars)
@@ -217,6 +227,8 @@ class Streamlines(object):
         """
         new_streamlines = Streamlines()
         new_streamlines.header = copy.deepcopy(self.header)
+        new_streamlines.num_label = copy.deepcopy(self.num_label)
+        new_streamlines.label_num = copy.deepcopy(self.label_num)
         return new_streamlines
 
     def get_streamline(self, streamline_id):
@@ -224,6 +236,9 @@ class Streamlines(object):
 
     def get_properties(self, streamline_id):
         return self.properties[self.streamlineid_pos[streamline_id]]
+
+    def get_streamline_label(self, streamline_id):
+        return self.streamline_label[self.streamlineid_pos[streamline_id]]
 
     def selectStreamlines(self, streamlines_ids):
         """Given a list of streamlines ID returns a new Streamline
@@ -236,6 +251,7 @@ class Streamlines(object):
         new_streamlines.properties = [self.get_properties(streamline_id) for streamline_id in streamlines_ids]
         new_streamlines.streamline_id = list(streamlines_ids)
         new_streamlines.streamlineid_pos = dict(zip(streamlines_ids, range(len(streamlines_ids)))) # this remaps streamline_id to the correct new positions
+        new_streamlines.streamline_label = N.array([self.get_streamline_label(streamline_id) for streamline_id in streamlines_ids])
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
 
@@ -309,6 +325,17 @@ class Streamlines(object):
         print "Done."
         return
 
+    def set_labels(self, labeled_streamline_ids, labeled_streamline_numlabels, label_num=None, num_label=None):
+        """Add labels to some streamlines
+        """
+        for i in range(len(labeled_streamline_ids)):
+            lsid = labeled_streamline_ids[i]
+            self.streamline_label[self.streamlineid_pos[lsid]] = labeled_streamline_numlabels[i]
+            pass
+        self.label_num = copy.deepcopy(label_num)
+        self.num_label = copy.deepcopy(num_label)
+        return
+    
 
 if __name__=="__main__":
     
