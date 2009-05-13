@@ -77,21 +77,25 @@ class Streamlines(object):
     def loadTrk(self, filename):
         """Load streamlines from TrackVis .trk file.
         """
+        print "Loading",filename,"..."
         self.filename = filename
         f = open(filename)
         self.readHeaderTrk(f)
         self.readStreamlinesTrk(f)
         f.close()
+        print "Done."
         return self.streamline
 
     def saveTrk(self, filename):
         """Save streamlines to a TrackVis .trk file.
         """
+        print "Saving",filename,"..."
         self.filename = filename
         f = open(filename, 'w')
         self.writeHeaderTrk(f)
         self.writeStreamlinesTrk(f)
         f.close()
+        print "Done."
         return
 
     def readHeaderTrk(self, f):
