@@ -15,6 +15,9 @@ import numpy as N
 import sys
 import copy
 import operator
+import gzip
+import cPickle
+import os
 
 # Definition of trackvis header structure.
 # See http://www.trackvis.org/docs/?subsect=fileformat
@@ -291,6 +294,20 @@ class Streamlines(object):
         if count:
             return volume
         return (volume>0).astype('i')
+
+    def save(self, filename=None):
+        """Dump Streamlines object to file. Assign a default filename if necessary.
+        """
+        if filename is None:
+            self.dumpfilename = "Streamlines_"+self.filename+".pickle"
+            pass
+        print "Saving current instance to file",filename,"...",
+        f = gzip.open(filename,'w')
+        cPickle.dump(self, f, protocol=2)
+        f.close()
+        print os.stat(filename)[6],"bytes...",
+        print "Done."
+        return
 
 
 if __name__=="__main__":

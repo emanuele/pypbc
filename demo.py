@@ -117,3 +117,6 @@ if __name__=="__main__":
     # (Skip=0%) of the instead of the 35571 I get here!!
     # Note that I compare slice x=50 here and slice x=51 in
     # TrackVis, according to the different numbering scheme.
+
+    s3.save("test_s3.pickle")
+    s.save("test_s.pickle")
