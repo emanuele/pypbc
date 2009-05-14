@@ -41,12 +41,12 @@ if __name__=="__main__":
     print
     streamline_id = 10
     print "Example: streamline_id=",streamline_id
-    print s.get_streamline(streamline_id)
+    print s.getStreamline(streamline_id)
     print "Convert points from mm to voxel coordinates:"
-    Vxyz = s.mm2voxel(s.get_streamline(streamline_id))
+    Vxyz = s.mm2voxel(s.getStreamline(streamline_id))
     print Vxyz
     print "Convert back and check whether differences are less than grid size...",
-    assert(((s.voxel2mm(Vxyz) - s.get_streamline(streamline_id))<s.header['voxel_size']).all())
+    assert(((s.voxel2mm(Vxyz) - s.getStreamline(streamline_id))<s.header['voxel_size']).all())
     print "OK."
     
     print
@@ -78,7 +78,7 @@ if __name__=="__main__":
     print
     streamline_id = 20
     print "Which streamlines cross (the voxels of) streamline with ID="+str(streamline_id)+" ?"
-    xyz = s.get_streamline(streamline_id)
+    xyz = s.getStreamline(streamline_id)
     ijk = s.mm2voxel(xyz)
     s2 = s.selectStreamlinesFromVoxels(ijk)
     print len(s2.streamline), "streamlines."

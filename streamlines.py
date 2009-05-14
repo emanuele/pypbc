@@ -74,15 +74,19 @@ class Streamlines(object):
         if self.label_num == None: self.label_num = {}
         self.filename = None
         self.voxel2streamlines = None
+        self.streamline2streamlines = None
         return
 
     @staticmethod
     def progress_meter(position, total, message, steps=10):
         """Simple progress meter. Static method.
         """
-        if position%(int(total/steps))==0:
-            print message, str(1+int(100.0*position/total))+'%'
-            sys.stdout.flush()
+        try:
+            if position%(int(total/steps))==0:
+                print message, str(1+int(100.0*position/total))+'%'
+                sys.stdout.flush()
+                pass
+        except ZeroDivisionError: # it happens when (int(total/steps))==0
             pass
         return
 
@@ -172,11 +176,11 @@ class Streamlines(object):
         n_streamlines = self.header['n_count'][0]
         k = 0
         for streamline_id in self.streamline_id:
-            num_points = N.array((self.get_streamline(streamline_id)).shape[0], dtype='<i4')
+            num_points = N.array((self.getStreamline(streamline_id)).shape[0], dtype='<i4')
             num_points.tofile(f)
-            xyz_scalar = N.array(self.get_streamline(streamline_id), dtype='<f4')
+            xyz_scalar = N.array(self.getStreamline(streamline_id), dtype='<f4')
             xyz_scalar.tofile(f)
-            properties = N.array(self.get_properties(streamline_id), dtype='<f4')
+            properties = N.array(self.getProperties(streamline_id), dtype='<f4')
             properties.tofile(f)
             self.progress_meter(k, n_streamlines, 'Writing streamlines...')
             k += 1
@@ -201,13 +205,13 @@ class Streamlines(object):
         n_streamlines = len(self.streamline)
         k = 0
         for streamline_id in self.streamline_id:
-            xyz = self.get_streamline(streamline_id)
+            xyz = self.getStreamline(streamline_id)
             ijk = self.mm2voxel(xyz)
             for i in range(xyz.shape[0]):
                 try:
-                    self.voxel2streamlines[tuple(ijk[i,:])].append(self.streamline_id[k])
+                    self.voxel2streamlines[tuple(ijk[i,:])].append(streamline_id)
                 except KeyError:
-                    self.voxel2streamlines[tuple(ijk[i,:])] = [self.streamline_id[k]]
+                    self.voxel2streamlines[tuple(ijk[i,:])] = [streamline_id]
                     pass
                 pass
             self.progress_meter(k, n_streamlines, 'Mapping voxels to streamlines...')
@@ -231,13 +235,13 @@ class Streamlines(object):
         new_streamlines.label_num = copy.deepcopy(self.label_num)
         return new_streamlines
 
-    def get_streamline(self, streamline_id):
+    def getStreamline(self, streamline_id):
         return self.streamline[self.streamlineid_pos[streamline_id]]
 
-    def get_properties(self, streamline_id):
+    def getProperties(self, streamline_id):
         return self.properties[self.streamlineid_pos[streamline_id]]
 
-    def get_streamline_label(self, streamline_id):
+    def getStreamlineLabel(self, streamline_id):
         return self.streamline_label[self.streamlineid_pos[streamline_id]]
 
     def selectStreamlines(self, streamlines_ids):
@@ -247,11 +251,11 @@ class Streamlines(object):
         adjusted to the actual number of fibers.
         """
         new_streamlines = self.fastCopy()
-        new_streamlines.streamline = [self.get_streamline(streamline_id) for streamline_id in streamlines_ids]
-        new_streamlines.properties = [self.get_properties(streamline_id) for streamline_id in streamlines_ids]
+        new_streamlines.streamline = [self.getStreamline(streamline_id) for streamline_id in streamlines_ids]
+        new_streamlines.properties = [self.getProperties(streamline_id) for streamline_id in streamlines_ids]
         new_streamlines.streamline_id = list(streamlines_ids)
         new_streamlines.streamlineid_pos = dict(zip(streamlines_ids, range(len(streamlines_ids)))) # this remaps streamline_id to the correct new positions
-        new_streamlines.streamline_label = N.array([self.get_streamline_label(streamline_id) for streamline_id in streamlines_ids])
+        new_streamlines.streamline_label = N.array([self.getStreamlineLabel(streamline_id) for streamline_id in streamlines_ids])
         new_streamlines.header['n_count'] = N.array([len(new_streamlines.streamline)]).astype('<i4')
         return new_streamlines
 
@@ -325,7 +329,7 @@ class Streamlines(object):
         print "Done."
         return
 
-    def set_labels(self, labeled_streamline_ids, labeled_streamline_numlabels, label_num=None, num_label=None):
+    def setLabels(self, labeled_streamline_ids, labeled_streamline_numlabels, label_num=None, num_label=None):
         """Add labels to some streamlines
         """
         for i in range(len(labeled_streamline_ids)):
@@ -336,6 +340,37 @@ class Streamlines(object):
         self.num_label = copy.deepcopy(num_label)
         return
     
+    
+    def setNewVoxelSize(self, new_voxel_size = N.array([4.0, 4.0, 4.0])):
+        """Set a new voxel size.
+        """
+        self.header['dim'] = (self.header['dim']*self.header['voxel_size']/new_voxel_size).astype('<h')
+        print "New header['dim'] =", self.header['dim']
+        self.header['voxel_size'] = new_voxel_size.astype('<f4')
+        return
+ 
+    def buildStreamlineStreamlinesDict(self):
+        """Build a dictionary mapping an input_streamline_id to an array of
+        streamlines_ids that cross at least one of the voxels (of the grid)
+        crossed by the input streamline. This means that the resluting streamlines
+        are candidates to be clustered with the input streamline.
+
+        Note that the size of the voxels can be changed at will with
+        setNewVoxelSize().
+        """
+        n_streamlines = len(self.streamline)
+        self.streamline2streamlines = {}
+        counter = 0
+        for streamline_id in self.streamline_id:
+            xyz = self.getStreamline(streamline_id)
+            ijk = self.mm2voxel(xyz)
+            streamline_id_list = N.unique(N.hstack([self.voxel2streamlines[i,j,k] for i,j,k in ijk]))
+            self.streamline2streamlines[streamline_id] = streamline_id_list
+            self.progress_meter(counter, n_streamlines, "Building streamline to streamlines map...")
+            counter += 1
+            pass
+        return self.streamline2streamlines
+
 
 if __name__=="__main__":
     
