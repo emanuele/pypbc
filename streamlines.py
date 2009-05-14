@@ -348,6 +348,10 @@ class Streamlines(object):
         print "New header['dim'] =", self.header['dim']
         self.header['voxel_size'] = new_voxel_size.astype('<f4')
         return
+
+    def getVoxelSize(self):
+        size = self.header['voxel_size']
+        return size
  
     def buildStreamlineStreamlinesDict(self):
         """Build a dictionary mapping an input_streamline_id to an array of
