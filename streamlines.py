@@ -369,6 +369,7 @@ class Streamlines(object):
             xyz = self.getStreamline(streamline_id)
             ijk = self.mm2voxel(xyz)
             streamline_id_list = N.unique(N.hstack([self.voxel2streamlines[i,j,k] for i,j,k in ijk]))
+            streamline_id_list = streamline_id_list[streamline_id_list!=streamline_id] # remove streamline_id
             self.streamline2streamlines[streamline_id] = streamline_id_list
             self.progress_meter(counter, n_streamlines, "Building streamline to streamlines map...")
             counter += 1
