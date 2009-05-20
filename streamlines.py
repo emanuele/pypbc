@@ -102,14 +102,14 @@ class Streamlines(object):
         print "Done."
         return self.streamline
 
-    def saveTrk(self, filename):
+    def saveTrk(self, filename, verbose=True):
         """Save streamlines to a TrackVis .trk file.
         """
         print "Saving",filename,"..."
         self.filename = filename
         f = open(filename, 'w')
         self.writeHeaderTrk(f)
-        self.writeStreamlinesTrk(f)
+        self.writeStreamlinesTrk(f, verbose=verbose)
         f.close()
         print "Done."
         return
@@ -168,7 +168,7 @@ class Streamlines(object):
             pass
         return
         
-    def writeStreamlinesTrk(self, f):
+    def writeStreamlinesTrk(self, f, verbose=True):
         """Write streamlines to file in .trk format. Assumption: header has
         already been written.
         """
@@ -182,7 +182,7 @@ class Streamlines(object):
             xyz_scalar.tofile(f)
             properties = N.array(self.getProperties(streamline_id), dtype='<f4')
             properties.tofile(f)
-            self.progress_meter(k, n_streamlines, 'Writing streamlines...')
+            if verbose: self.progress_meter(k, n_streamlines, 'Writing streamlines...')
             k += 1
             pass
         return
