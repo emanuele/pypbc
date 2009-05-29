@@ -122,6 +122,9 @@ class Streamlines(object):
         for field_name, count, dtype in trk_header_structure:
             self.header[field_name] = N.fromfile(f, dtype=dtype, count=count)
             pass
+        # keep copies of original dim and voxel_size, to be used when saving
+        self.original_dim = self.header['dim'].copy()
+        self.original_voxel_size = self.header['voxel_size'].copy()        
         assert(f.tell()==1000) # header is always 1000 bytes.
         return
 
@@ -139,6 +142,15 @@ class Streamlines(object):
         """Write .trk header to file.
         """
         global trk_header_structure
+        # use original dim and voxel_size and warn if they changed:
+        if not (self.header['dim']==self.original_dim).all():
+            self.header['dim']=self.original_dim
+            print "WARNING writeHeaderTrk(): original dim changed. Saving using original values."
+            pass
+        if not (self.header['voxel_size']==self.original_voxel_size).all():
+            self.header['voxel_size']=self.original_voxel_size
+            print "WARNING writeHeaderTrk(): original voxel_size changed. Saving using original values."
+            pass        
         for field_name, count, dtype in trk_header_structure:
             # Note that ".astype(dtype)" is just to be sure or correct types:
             self.header[field_name].astype(dtype).tofile(f)
@@ -232,7 +244,9 @@ class Streamlines(object):
         new_streamlines = Streamlines()
         new_streamlines.header = copy.deepcopy(self.header)
         new_streamlines.num_label = copy.deepcopy(self.num_label)
-        new_streamlines.label_num = copy.deepcopy(self.label_num)
+        new_streamlines.label_num = copy.deepcopy(self.label_num)        
+        new_streamlines.original_dim = copy.deepcopy(self.original_dim)        
+        new_streamlines.original_voxel_size = copy.deepcopy(self.original_voxel_size)
         return new_streamlines
 
     def getStreamline(self, streamline_id):
