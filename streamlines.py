@@ -75,6 +75,8 @@ class Streamlines(object):
         self.filename = None
         self.voxel2streamlines = None
         self.streamline2streamlines = None
+        self.original_dim = None
+        self.original_voxel_size = None
         return
 
     @staticmethod
@@ -143,11 +145,11 @@ class Streamlines(object):
         """
         global trk_header_structure
         # use original dim and voxel_size and warn if they changed:
-        if not (self.header['dim']==self.original_dim).all():
+        if self.original_dim is not None and not (self.header['dim']==self.original_dim).all():
             self.header['dim']=self.original_dim
             print "WARNING writeHeaderTrk(): original dim changed. Saving using original values."
             pass
-        if not (self.header['voxel_size']==self.original_voxel_size).all():
+        if self.original_voxel_size is not None and not (self.header['voxel_size']==self.original_voxel_size).all():
             self.header['voxel_size']=self.original_voxel_size
             print "WARNING writeHeaderTrk(): original voxel_size changed. Saving using original values."
             pass        
