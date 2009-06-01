@@ -392,6 +392,21 @@ class Streamlines(object):
             pass
         return self.streamline2streamlines
 
+    def affineTransform(self, A, b):
+        """Transform all coordinates using y=Ax+b.
+        """
+        assert(A.shape==(3,3))
+        assert(b.shape==(3,))
+        # tranform all streamline coordinates:
+        n_streamlines = len(self.streamline)
+        for idx in range(n_streamlines):
+            self.progress_meter(idx, n_streamlines, "Affine transform...")
+            xyz = self.streamline[idx]
+            new_xyz = (N.dot(A, xyz.T) + b[:,None]).transpose()
+            self.streamline[idx] = new_xyz
+            pass
+        return 
+        
 
 if __name__=="__main__":
     
